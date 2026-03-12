@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Administration - QuizMaster</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <style>
+        body { background: #0f0f23; color: #fff; font-family: 'Segoe UI', sans-serif; }
+        .sidebar { background: #1a1a2e; min-height: 100vh; padding: 30px 20px; width: 250px; position: fixed; }
+        .main-content { margin-left: 250px; padding: 30px; }
+        .sidebar a { color: rgba(255,255,255,0.7); text-decoration: none; display: block; padding: 10px 15px; border-radius: 8px; margin-bottom: 5px; transition: all 0.2s; }
+        .sidebar a:hover, .sidebar a.active { background: rgba(108,99,255,0.3); color: #fff; }
+        .table { color: #fff; }
+        .table th { background: rgba(255,255,255,0.1); border: none; }
+        .table td { border-color: rgba(255,255,255,0.1); vertical-align: middle; }
+        .table tbody tr:hover { background: rgba(255,255,255,0.05); }
+        .card-admin { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 20px; margin-bottom: 20px; }
+        .filter-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); color: #fff; border-radius: 8px; padding: 6px 14px; cursor: pointer; transition: all 0.2s; }
+        .filter-btn:hover, .filter-btn.active { background: rgba(108,99,255,0.3); border-color: #6c63ff; color: #fff; }
+    </style>
+</head>
+<body>
+<div class="sidebar">
+    <h4 class="fw-bold mb-4">⚙️ Admin Panel</h4>
+    <a href="/admin" class="active">📋 Questions</a>
+    <a href="/admin/question/new">➕ Nouvelle question</a>
+    <a href="/leaderboard">🏆 Classement</a>
+    <a href="/">🏠 Accueil</a>
+    <a href="/logout" style="color:#ff6b6b;margin-top:10px">🚪 Déconnexion</a>
+</div>
+
+<div class="main-content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold mb-0">Gestion des Questions</h2>
+        <a href="/admin/question/new" class="btn btn-primary px-4">➕ Ajouter</a>
+    </div>
+
+    <!-- Stats par catégorie -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3" th:each="cat : ${categories}">
+            <div class="card-admin text-center">
+                <div style="font-size:2rem" th:text="${cat.icon}">🎓</div>
+                <div class="fw-bold" th:text="${cat.label}">Cat</div>
+                <div class="text-muted small" th:text="${countByCategory[cat.name()] + ' questions'}">0 questions</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card-admin text-center">
+                <div style="font-size:2rem">📊</div>
+                <div class="fw-bold">Total</div>
+                <div class="text-muted small" th:text="${totalCount + ' questions'}">0</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtres : on utilise data-cat au lieu de th:onclick pour éviter la restriction Thymeleaf 3.1 -->
+    <div class="mb-3">
+        <button class="filter-btn active me-2" data-cat="ALL">Tous</button>
+        <button th:each="cat : ${categories}"
+                th:data-cat="${cat.name()}"
+                th:text="${cat.icon} + ' ' + ${cat.label}"
+                class="filter-btn me-2">Cat</button>
+    </div>
+
+    <!-- Tableau -->
+    <div class="card-admin">
+        <div class="table-responsive">
+            <table class="table" id="questionsTable">
+                <thead>
+                <tr>
+                    <th>#</th><th>Catégorie</th><th>Question</th><th>Difficulté</th><th>Pts</th><th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="q : ${questions}" th:data-category="${q.category.name()}">
+                    <td th:text="${q.id}">1</td>
+                    <td th:text="${q.category.icon + ' ' + q.category.label}">Cat</td>
+                    <td>
+                        <div th:text="${#strings.abbreviate(q.text, 60)}">Question</div>
+                        <small class="text-muted" th:text="${q.optionCount + ' options'}">options</small>
+                    </td>
+                    <td>
+                        <span class="badge"
+                              th:classappend="${q.difficulty.name() == 'FACILE' ? 'bg-success' : (q.difficulty.name() == 'MOYEN' ? 'bg-warning text-dark' : 'bg-danger')}"
+                              th:text="${q.difficulty.label}">Niveau</span>
+                    </td>
+                    <td th:text="${q.points}">1</td>
+                    <td>
+                        <a th:href="@{'/admin/question/edit/' + ${q.id}}" class="btn btn-sm btn-outline-info me-1">✏️</a>
+                        <form th:action="@{'/admin/question/delete/' + ${q.id}}" method="post" style="display:inline"
+                              onsubmit="return confirm('Supprimer cette question ?')">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">🗑️</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Filtre via data-cat (pas de th:onclick pour respecter la sécurité Thymeleaf 3.1)
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            const cat = this.dataset.cat;
+            document.querySelectorAll('#questionsTable tbody tr').forEach(row => {
+                row.style.display = (cat === 'ALL' || row.dataset.category === cat) ? '' : 'none';
+            });
+        });
+    });
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

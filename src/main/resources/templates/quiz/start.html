@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title th:text="${category.label} + ' - Quiz'">Quiz</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet"/>
+    <style>
+        body { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); min-height: 100vh; color: #fff; font-family: 'Segoe UI', sans-serif; }
+        .start-card { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.15); border-radius: 24px; padding: 50px; max-width: 600px; margin: 80px auto; }
+        .form-control, .form-select { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 12px; padding: 12px 16px; }
+        .form-control:focus, .form-select:focus { background: rgba(255,255,255,0.15); border-color: #6c63ff; color: #fff; box-shadow: 0 0 0 3px rgba(108,99,255,0.3); }
+        .form-control::placeholder { color: rgba(255,255,255,0.4); }
+        .form-select option { background: #1a1a2e; color: #fff; }
+        .btn-start { background: linear-gradient(135deg, #6c63ff, #f50057); border: none; border-radius: 50px; padding: 15px 40px; font-size: 1.1rem; font-weight: 600; width: 100%; transition: transform 0.2s, box-shadow 0.2s; }
+        .btn-start:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(108,99,255,0.5); }
+        .difficulty-option { display: none; }
+        .difficulty-label { background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px 20px; cursor: pointer; transition: all 0.2s; text-align: center; }
+        .difficulty-option:checked + .difficulty-label { border-color: #6c63ff; background: rgba(108,99,255,0.2); }
+        .icon-big { font-size: 4rem; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="start-card animate__animated animate__fadeIn">
+        <div class="text-center mb-4">
+            <div class="icon-big" th:text="${category.icon}">🎓</div>
+            <h2 class="mt-3 fw-bold" th:text="'Quiz ' + ${category.label}">Quiz</h2>
+            <p class="text-muted" th:text="${questionCount} + ' questions disponibles'">questions</p>
+        </div>
+
+        <form th:action="@{/quiz/begin}" method="post">
+            <input type="hidden" name="category" th:value="${category}"/>
+
+            <div class="mb-4">
+                <label class="form-label fw-semibold">👤 Votre prénom</label>
+                <input type="text" name="playerName" class="form-control" th:value="${currentUser.displayName}" required maxlength="30"/>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label fw-semibold">📊 Nombre de questions</label>
+                <select name="numQuestions" class="form-select">
+                    <option value="5">5 questions</option>
+                    <option value="10" selected>10 questions</option>
+                    <option value="15">15 questions</option>
+                    <option value="20">20 questions (max)</option>
+                </select>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label fw-semibold">🎯 Niveau de difficulté</label>
+                <div class="row g-2 mt-1">
+                    <div class="col-4">
+                        <input type="radio" class="difficulty-option" name="difficulty" id="diffAll" value="">
+                        <label for="diffAll" class="difficulty-label w-100">
+                            <div>🎲</div>
+                            <div class="small">Tous</div>
+                        </label>
+                    </div>
+                    <div th:each="diff : ${difficulties}" class="col">
+                        <input type="radio" class="difficulty-option" name="difficulty"
+                               th:id="'diff' + ${diff.name()}" th:value="${diff.name()}"/>
+                        <label th:for="'diff' + ${diff.name()}" class="difficulty-label w-100">
+                            <div th:text="${diff == T(com.quiz.model.Difficulty).FACILE ? '😊' : (diff == T(com.quiz.model.Difficulty).MOYEN ? '😐' : '😤')}">😊</div>
+                            <div class="small" th:text="${diff.label}">Facile</div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-start btn-primary text-white">
+                🚀 Commencer le Quiz !
+            </button>
+            <a href="/" class="btn btn-outline-light w-100 mt-3">← Retour à l'accueil</a>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Select "Tous" by default
+    document.getElementById('diffAll').checked = true;
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

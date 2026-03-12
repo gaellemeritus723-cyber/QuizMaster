@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Résultat du Quiz</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet"/>
+    <style>
+        body { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); min-height: 100vh; color: #fff; font-family: 'Segoe UI', sans-serif; }
+        .result-card { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.15); border-radius: 24px; padding: 50px; max-width: 600px; margin: 60px auto; text-align: center; }
+        .score-circle { width: 160px; height: 160px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0 auto 30px; font-size: 1rem; font-weight: 700; border: 5px solid; }
+        .grade-a { border-color: #06d6a0; background: rgba(6,214,160,0.15); }
+        .grade-b { border-color: #00b4d8; background: rgba(0,180,216,0.15); }
+        .grade-c { border-color: #f77f00; background: rgba(247,127,0,0.15); }
+        .grade-d { border-color: #f50057; background: rgba(245,0,87,0.15); }
+        .score-num { font-size: 3rem; font-weight: 900; line-height: 1; }
+        .stat-box { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 15px; margin: 10px 0; display: flex; justify-content: space-between; }
+        .review-item { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 15px; margin-bottom: 10px; text-align: left; }
+        .correct { border-left: 3px solid #06d6a0; }
+        .wrong { border-left: 3px solid #f50057; }
+        .btn-action { border-radius: 50px; padding: 12px 30px; font-weight: 600; margin: 5px; }
+        .confetti { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="result-card animate__animated animate__bounceIn">
+        <!-- Grade Circle -->
+        <div th:with="grade=${result.grade}"
+             th:classappend="${grade.startsWith('A') ? 'grade-a' : (grade.startsWith('B') ? 'grade-b' : (grade.startsWith('C') ? 'grade-c' : 'grade-d'))}"
+             class="score-circle">
+            <div class="score-num" th:text="${result.grade}">A</div>
+            <div th:text="${#numbers.formatDecimal(result.percentage, 1, 1)} + '%'">85%</div>
+        </div>
+
+        <!-- Header -->
+        <h2 class="fw-bold mb-1">
+            <span th:text="${result.percentage >= 80 ? '🎉 Excellent !' : (result.percentage >= 60 ? '👍 Bien joué !' : (result.percentage >= 40 ? '😐 Pas mal !' : '💪 Courage !'))}">Bravo!</span>
+        </h2>
+        <p class="text-muted" th:text="${result.playerName}">Player</p>
+
+        <!-- Stats -->
+        <div class="mt-4">
+            <div class="stat-box">
+                <span>📚 Catégorie</span>
+                <strong th:text="${result.category.label}">Maths</strong>
+            </div>
+            <div class="stat-box" th:if="${result.difficulty != null}">
+                <span>🎯 Difficulté</span>
+                <strong th:text="${result.difficulty.label}">Moyen</strong>
+            </div>
+            <div class="stat-box">
+                <span>✅ Bonnes réponses</span>
+                <strong th:text="${result.score} + ' / ' + ${result.totalQuestions}">7/10</strong>
+            </div>
+            <div class="stat-box">
+                <span>⭐ Points gagnés</span>
+                <strong th:text="${result.earnedPoints} + ' / ' + ${result.totalPoints}">14/20</strong>
+            </div>
+        </div>
+
+        <!-- Review -->
+        <div class="mt-4 text-start">
+            <h5 class="mb-3">📋 Révision des réponses</h5>
+            <div th:each="q, qIter : ${quizData.questions}"
+                 th:with="userAns=${quizData.userAnswers.size() > qIter.index ? quizData.userAnswers[qIter.index] : -1},
+                          isCorrect=${userAns == q.correctAnswerIndex}"
+                 th:classappend="${isCorrect ? 'correct' : 'wrong'}"
+                 class="review-item">
+                <div class="small fw-semibold mb-1">
+                    <span th:text="${isCorrect ? '✅' : '❌'}">✅</span>
+                    Q<span th:text="${qIter.index + 1}">1</span>: <span th:text="${q.text}">Question</span>
+                </div>
+                <div class="small">
+                    <span class="text-success" th:text="'✓ ' + ${q.options[q.correctAnswerIndex]}">Bonne réponse</span>
+                    <span th:if="${!isCorrect and userAns >= 0}" class="text-danger ms-2"
+                          th:text="'✗ Votre réponse: ' + ${q.options[userAns]}">Votre réponse</span>
+                    <span th:if="${userAns < 0}" class="text-warning ms-2">(Non répondu)</span>
+                </div>
+                <div th:if="${q.explanation != null}" class="small text-muted mt-1"
+                     th:text="'💡 ' + ${q.explanation}">Explication</div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="mt-4">
+            <a th:href="@{/quiz/start(category=${result.category})}" class="btn btn-primary btn-action text-white">
+                🔄 Rejouer
+            </a>
+            <a href="/" class="btn btn-outline-light btn-action">🏠 Accueil</a>
+            <a href="/leaderboard" class="btn btn-outline-warning btn-action">🏆 Classement</a>
+        </div>
+    </div>
+</div>
+
+<canvas id="confetti" class="confetti" th:if="${result.percentage >= 70}"></canvas>
+
+<script>
+    // Simple confetti effect for good scores
+    const canvas = document.getElementById('confetti');
+    if (canvas) {
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        const particles = Array.from({length: 100}, () => ({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height - canvas.height,
+            w: Math.random() * 10 + 5,
+            h: Math.random() * 5 + 3,
+            color: ['#6c63ff','#f50057','#06d6a0','#f77f00','#00b4d8'][Math.floor(Math.random()*5)],
+            speed: Math.random() * 3 + 1,
+            angle: Math.random() * 360
+        }));
+        let animFrame;
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            let done = true;
+            particles.forEach(p => {
+                p.y += p.speed;
+                p.angle += 2;
+                if (p.y < canvas.height) done = false;
+                ctx.save();
+                ctx.translate(p.x, p.y);
+                ctx.rotate(p.angle * Math.PI / 180);
+                ctx.fillStyle = p.color;
+                ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+                ctx.restore();
+            });
+            if (!done) animFrame = requestAnimationFrame(animate);
+        }
+        animate();
+        setTimeout(() => cancelAnimationFrame(animFrame), 3000);
+    }
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Classement - QuizMaster</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <style>
+        body { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); min-height: 100vh; color: #fff; font-family: 'Segoe UI', sans-serif; }
+        .navbar { background: rgba(255,255,255,0.05) !important; backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .nav-tabs { border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .nav-tabs .nav-link { color: rgba(255,255,255,0.6); border: none; padding: 12px 20px; }
+        .nav-tabs .nav-link.active { color: #fff; background: rgba(108,99,255,0.3); border-radius: 8px 8px 0 0; border-bottom: 2px solid #6c63ff; }
+        .leaderboard-table { background: rgba(255,255,255,0.05); border-radius: 16px; overflow: hidden; }
+        .table { color: #fff; margin: 0; }
+        .table th { background: rgba(255,255,255,0.1); border: none; padding: 15px 20px; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; }
+        .table td { border-color: rgba(255,255,255,0.05); padding: 14px 20px; }
+        .table tbody tr:hover { background: rgba(255,255,255,0.05); }
+        .rank-badge { width: 35px; height: 35px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; }
+        .rank-1 { background: linear-gradient(135deg, gold, #ffa500); color: #000; }
+        .rank-2 { background: linear-gradient(135deg, silver, #aaa); color: #000; }
+        .rank-3 { background: linear-gradient(135deg, #cd7f32, #8b4513); color: #fff; }
+        .rank-other { background: rgba(255,255,255,0.1); }
+        .grade-badge { padding: 4px 10px; border-radius: 50px; font-weight: 700; font-size: 0.85rem; }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container">
+        <a class="navbar-brand fw-bold fs-4" href="/">🎯 QuizMaster</a>
+        <div class="ms-auto d-flex gap-2"><span th:if="${currentUser}" style="color:rgba(255,255,255,0.7);font-size:0.9rem;align-self:center" th:text="'👤 ' + ${currentUser.displayName}">User</span><a href="/" class="btn btn-outline-light btn-sm">← Retour</a><a href="/logout" class="btn btn-outline-danger btn-sm">Déconnexion</a></div>
+    </div>
+</nav>
+
+<div class="container py-5">
+    <h1 class="text-center fw-bold mb-5">🏆 Tableau des Scores</h1>
+
+    <ul class="nav nav-tabs mb-4" id="leaderTabs">
+        <li class="nav-item">
+            <a class="nav-link active" data-bs-toggle="tab" href="#global">🌍 Global</a>
+        </li>
+        <li class="nav-item" th:each="cat : ${categories}">
+            <a class="nav-link" data-bs-toggle="tab" th:href="'#' + ${cat.name()}"
+               th:text="${cat.icon} + ' ' + ${cat.label}">Catégorie</a>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        <!-- Global -->
+        <div class="tab-pane fade show active" id="global">
+            <div class="leaderboard-table">
+                <table class="table">
+                    <thead><tr><th>#</th><th>Joueur</th><th>Catégorie</th><th>Score</th><th>Points</th><th>Grade</th></tr></thead>
+                    <tbody>
+                    <tr th:if="${#lists.isEmpty(topScores)}">
+                        <td colspan="6" class="text-center py-4 text-muted">Aucun score enregistré</td>
+                    </tr>
+                    <tr th:each="r, i : ${topScores}">
+                        <td>
+                            <span th:classappend="${i.index == 0 ? 'rank-1' : (i.index == 1 ? 'rank-2' : (i.index == 2 ? 'rank-3' : 'rank-other'))}"
+                                  class="rank-badge" th:text="${i.index + 1}">1</span>
+                        </td>
+                        <td><strong th:text="${r.playerName}">Player</strong></td>
+                        <td><span th:text="${r.category.icon} + ' ' + ${r.category.label}">Catégorie</span></td>
+                        <td th:text="${r.score} + '/' + ${r.totalQuestions}">7/10</td>
+                        <td><strong th:text="${r.earnedPoints} + ' pts'">14 pts</strong></td>
+                        <td>
+                            <span class="grade-badge"
+                                  th:classappend="${r.percentage >= 70 ? 'bg-success' : (r.percentage >= 50 ? 'bg-warning text-dark' : 'bg-danger')}"
+                                  th:text="${r.grade}">A</span>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Per category -->
+        <div th:each="cat : ${categories}" class="tab-pane fade" th:id="${cat.name()}">
+            <div class="leaderboard-table">
+                <table class="table">
+                    <thead><tr><th>#</th><th>Joueur</th><th>Score</th><th>Points</th><th>Grade</th></tr></thead>
+                    <tbody>
+                    <tr th:with="catResults=${#ctx.getVariable('top' + cat.name())}"
+                        th:if="${catResults == null or #lists.isEmpty(catResults)}">
+                        <td colspan="5" class="text-center py-4 text-muted">Aucun score pour cette catégorie</td>
+                    </tr>
+                    <tr th:with="catResults=${#ctx.getVariable('top' + cat.name())}"
+                        th:each="r, i : ${catResults}">
+                        <td>
+                            <span th:classappend="${i.index == 0 ? 'rank-1' : (i.index == 1 ? 'rank-2' : (i.index == 2 ? 'rank-3' : 'rank-other'))}"
+                                  class="rank-badge" th:text="${i.index + 1}">1</span>
+                        </td>
+                        <td><strong th:text="${r.playerName}">Player</strong></td>
+                        <td th:text="${r.score} + '/' + ${r.totalQuestions}">7/10</td>
+                        <td><strong th:text="${r.earnedPoints} + ' pts'">14 pts</strong></td>
+                        <td>
+                            <span class="grade-badge"
+                                  th:classappend="${r.percentage >= 70 ? 'bg-success' : (r.percentage >= 50 ? 'bg-warning text-dark' : 'bg-danger')}"
+                                  th:text="${r.grade}">A</span>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
