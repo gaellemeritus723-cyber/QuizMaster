@@ -3,9 +3,12 @@ package com.quiz.model;
 import lombok.Data;
 import java.util.ArrayList;
 import java.util.List;
+import java.io.Serializable;
+
 
 @Data
-public class QuizSession {
+public class QuizSession implements Serializable {
+    private static final long serialVersionUID = 1L;
     private String playerName;
     private Category category;
     private Difficulty difficulty;
