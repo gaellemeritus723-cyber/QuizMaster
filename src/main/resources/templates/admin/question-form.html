@@ -30,14 +30,14 @@
             <input type="hidden" name="id" th:value="${question.id}"/>
 
             <div class="mb-4">
-                <label class="form-label">📝 Texte de la question</label>
+                <label class="form-label"> Texte de la question</label>
                 <textarea name="text" class="form-control" rows="3" required
                           th:text="${question.text}" placeholder="Entrez votre question..."></textarea>
             </div>
 
             <div class="row mb-4">
                 <div class="col-md-4">
-                    <label class="form-label">📚 Catégorie</label>
+                    <label class="form-label"> Catégorie</label>
                     <select name="category" class="form-select" required>
                         <option th:each="cat : ${categories}"
                                 th:value="${cat.name()}"
@@ -65,7 +65,7 @@
             </div>
 
             <div class="mb-4">
-                <label class="form-label">🅰️ Options de réponse <small class="text-muted">(Cochez la bonne réponse)</small></label>
+                <label class="form-label">️ Options de réponse <small class="text-muted">(Cochez la bonne réponse)</small></label>
                 <div th:each="i : ${#numbers.sequence(0, 3)}" class="option-group">
                     <div class="d-flex align-items-center gap-3">
                         <input type="radio" name="correctAnswerIndex" th:value="${i}"
@@ -80,18 +80,18 @@
                                required/>
                     </div>
                 </div>
-                <small class="text-muted">Sélectionnez le bouton radio à côté de la bonne réponse.</small>
+                <small class="text-muted">Sélectionnez le bouton  à côté de la bonne réponse.</small>
             </div>
 
             <div class="mb-4">
-                <label class="form-label">💡 Explication (optionnelle)</label>
+                <label class="form-label"> Explication (optionnelle)</label>
                 <textarea name="explanation" class="form-control" rows="2"
                           th:text="${question.explanation}"
                           placeholder="Expliquez pourquoi c'est la bonne réponse..."></textarea>
             </div>
 
             <div class="d-flex gap-3">
-                <button type="submit" class="btn btn-primary px-5">💾 Enregistrer</button>
+                <button type="submit" class="btn btn-primary px-5"> Enregistrer</button>
                 <a href="/admin" class="btn btn-outline-light">Annuler</a>
             </div>
         </form>

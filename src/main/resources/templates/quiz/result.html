@@ -43,7 +43,7 @@
         <!-- Stats -->
         <div class="mt-4">
             <div class="stat-box">
-                <span>📚 Catégorie</span>
+                <span> Catégorie</span>
                 <strong th:text="${result.category.label}">Maths</strong>
             </div>
             <div class="stat-box" th:if="${result.difficulty != null}">
@@ -62,7 +62,7 @@
 
         <!-- Review -->
         <div class="mt-4 text-start">
-            <h5 class="mb-3">📋 Révision des réponses</h5>
+            <h5 class="mb-3"> Révision des réponses</h5>
             <div th:each="q, qIter : ${quizData.questions}"
                  th:with="userAns=${quizData.userAnswers.size() > qIter.index ? quizData.userAnswers[qIter.index] : -1},
                           isCorrect=${userAns == q.correctAnswerIndex}"
@@ -86,7 +86,7 @@
         <!-- Actions -->
         <div class="mt-4">
             <a th:href="@{/quiz/start(category=${result.category})}" class="btn btn-primary btn-action text-white">
-                🔄 Rejouer
+                 Rejouer
             </a>
             <a href="/" class="btn btn-outline-light btn-action">🏠 Accueil</a>
             <a href="/leaderboard" class="btn btn-outline-warning btn-action">🏆 Classement</a>

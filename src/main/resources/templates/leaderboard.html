@@ -28,7 +28,7 @@
 <nav class="navbar navbar-expand-lg navbar-dark">
     <div class="container">
         <a class="navbar-brand fw-bold fs-4" href="/">🎯 QuizMaster</a>
-        <div class="ms-auto d-flex gap-2"><span th:if="${currentUser}" style="color:rgba(255,255,255,0.7);font-size:0.9rem;align-self:center" th:text="'👤 ' + ${currentUser.displayName}">User</span><a href="/" class="btn btn-outline-light btn-sm">← Retour</a><a href="/logout" class="btn btn-outline-danger btn-sm">Déconnexion</a></div>
+        <div class="ms-auto d-flex gap-2"><span th:if="${currentUser}" style="color:rgba(255,255,255,0.7);font-size:0.9rem;align-self:center" th:text="' ' + ${currentUser.displayName}">User</span><a href="/" class="btn btn-outline-light btn-sm">← Retour</a><a href="/logout" class="btn btn-outline-danger btn-sm">Déconnexion</a></div>
     </div>
 </nav>
 
